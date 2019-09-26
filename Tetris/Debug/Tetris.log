@@ -1,0 +1,5 @@
+﻿  main.c
+C:\Users\leejiho\source\repos\Tetris\Tetris\main.c(51,12): warning C4013: 'kbhit'이(가) 정의되지 않았습니다. extern은 int형을 반환하는 것으로 간주합니다.
+C:\Users\leejiho\source\repos\Tetris\Tetris\main.c(52,19): warning C4013: 'getch'이(가) 정의되지 않았습니다. extern은 int형을 반환하는 것으로 간주합니다.
+C:\Users\leejiho\source\repos\Tetris\Tetris\main.c(402,23): warning C4047: 'return': 'int **'의 간접 참조 수준이 'int [4][4]'과(와) 다릅니다.
+LINK : fatal error LNK1168: C:\Users\leejiho\source\repos\Tetris\Debug\Tetris.exe을(를) 쓰기용으로 열 수 없습니다.
