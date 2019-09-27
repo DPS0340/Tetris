@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
+#include <conio.h>
 #include <Windows.h>
 
 void gotoxy(int, int);
@@ -13,21 +14,21 @@ void check(int**, int, int);
 
 void print_arr(int**, int, int);
 
-void print_block(int**, int**, int, int, int);
+void print_block(int**, int**, int, int, int, int, int);
 
-int is_x_collision(int**, int**, int, int);
+int is_x_collision(int**, int**, int, int, int, int, int);
 
-int is_y_collision(int**, int**, int, int);
+int is_y_collision(int**, int**, int, int, int, int, int);
 
 int** copy_2d_arr(int**, int, int, int);
 
-void rotate_left(int**, int**, int);
+void rotate_left(int**, int**, int, int, int, int, int);
 
-void rotate_right(int**, int**, int);
+void rotate_right(int**, int**, int, int, int, int, int);
 
 void rotate_minus_90(int**, int);
 
-void stick(int**, int**, int, int, int);
+void stick(int**, int**, int, int, int, int, int);
 
 int** make_block(void);
 
@@ -48,35 +49,44 @@ int main(void) {
 	int** block = make_block();
 	while (1) {
 		print_wall(8, 15);
-		if (kbhit()) {
-			int key = getch();
-			if (key == 224 || key == 0) {
-				key = getch();
-				if (key == 75) {
-					rotate_left(arr, block, n);
-				}
-				else if (key == 77) {
-					rotate_right(arr, block, n);
-				}
-				else if (key == 80) {
-					if (is_y_collision(arr, block, x, y) == 0) {
-						y++;
+		print_block(arr, block, x, y, x_max, y_max, n);
+		print_arr(arr, x_max, y_max);
+		if (_kbhit()) {
+			int key = getchar();
+			if (key == 27) {
+				return 0;
+			} else if (key == 224 || key == 0) {
+				if (_kbhit()) {
+					key = getchar();
+					if (key == 75) {
+						rotate_left(arr, block, x, y, n, x_max, y_max);
 					}
-					else {
-						stick(arr, block, x, y, n);
-						block = make_block();
+					else if (key == 77) {
+						rotate_right(arr, block, x, y, n, x_max, y_max);
+					}
+					else if (key == 80) {
+						if (is_y_collision(arr, block, x, y, n, x_max, y_max) == 0) {
+							y++;
+						}
+						else {
+							stick(arr, block, x, y, n, x_max, y_max);
+							block = make_block();
+							x = 0;
+							y = 0;
+						}
 					}
 				}
 			}
 		}
-		if (is_y_collision(arr, block, x, y) == 0) {
+		if (is_y_collision(arr, block, x, y, n, x_max, y_max) == 0) {
 			y++;
 		}
 		else {
-			stick(arr, block, x, y, n);
+			stick(arr, block, x, y, n, x_max, y_max);
 			block = make_block();
+			x = 0;
+			y = 0;
 		}
-
 		if (is_lose(arr, x_max, y_max)) {
 			gotoxy(0, y_max + 2);
 			printf("│б!");
@@ -84,11 +94,15 @@ int main(void) {
 		}
 		check(arr, x_max, y_max);
 		refresh(arr, x_max, y_max);
+		system("cls");
+		print_wall(8, 15);
+		print_block(arr, block, x, y, x_max, y_max, n);
 		print_arr(arr, x_max, y_max);
-		print_block(arr, block, x_max, y_max, n);
 		Sleep(500);
 		system("cls");
 	}
+
+	return 0;
 }
 
 void print_wall(int x, int y) {
@@ -149,10 +163,10 @@ void print_arr(int** arr, int x, int y) {
 	}
 }
 
-void print_block(int** arr, int** block, int x, int y, int n) {
+void print_block(int** arr, int** block, int x, int y, int x_max, int y_max, int n) {
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
-			if (block[i][j] && y + i < sizeof(arr) / sizeof(int*) && x + j < sizeof(arr[0]) / sizeof(int)) {
+			if (block[i][j]) {
 				gotoxy(y + i + 1, x + j + 1);
 				printf("бс");
 			}
@@ -169,16 +183,10 @@ int is_lose(int** arr, int x_max, int y_max) {
 	return 0;
 }
 
-int is_x_collision(int** arr, int** block, int x, int y) {
-	if (y + sizeof(block) / sizeof(int*) > sizeof(arr) / sizeof(int*)) {
-		return -1;
-	}
-	if (x + sizeof(block[0]) / sizeof(int) > sizeof(arr[0]) / sizeof(int)) {
-		return -1;
-	}
-	for (int i = 0; i < sizeof(block) / sizeof(int*); i++) {
-		for (int j = 0; j < sizeof(block[0]) / sizeof(int); j++) {
-			if (block[i][j] == 1 && arr[y + i][x + j] == block[i][j]) {
+int is_x_collision(int** arr, int** block, int x, int y, int n, int x_max, int y_max) {
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			if (block[i][j] == 1 && y + j < y_max && x + i < x_max && arr[y + i][x + j] == block[i][j]) {
 				return 1;
 			}
 		}
@@ -186,10 +194,10 @@ int is_x_collision(int** arr, int** block, int x, int y) {
 	return 0;
 }
 
-int is_y_collision(int** arr, int** block, int x, int y) {
-	for (int i = 0; i < sizeof(block) / sizeof(int*); i++) {
-		for (int j = 0; j < sizeof(block[0]) / sizeof(int); j++) {
-			if (block[i][j] == 1 && arr[y + j][x + i] == block[i][j]) {
+int is_y_collision(int** arr, int** block, int x, int y, int n, int x_max, int y_max) {
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			if (block[i][j] == 1 && y + j < y_max && x + i < x_max && arr[y + j][x + i] == block[i][j]) {
 				return 1;
 			}
 		}
@@ -197,12 +205,12 @@ int is_y_collision(int** arr, int** block, int x, int y) {
 	return 0;
 }
 
-void rotate_left(int** arr, int** block, int n) {
-	int** temp = copy_2d_arr(block, sizeof(block[0]) / sizeof(int), sizeof(block) / sizeof(int*), 0);
+void rotate_left(int** arr, int** block, int x, int y, int n, int x_max, int y_max) {
+	int** temp = copy_2d_arr(block, n, n, 0);
 
 	rotate_minus_90(temp, n);
 
-	if (!is_y_collision(arr, temp, n, n) && !is_x_collision(arr, temp, n, n)) {
+	if (!is_y_collision(arr, temp, x, y, n, x_max, y_max) && !is_x_collision(arr, temp, x, y, n, x_max, y_max)) {
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				arr[i][j] = temp[i][j];
@@ -213,14 +221,14 @@ void rotate_left(int** arr, int** block, int n) {
 	free(temp);
 }
 
-void rotate_right(int** arr, int** block, int n) {
-	int** temp = copy_2d_arr(block, sizeof(block[0]) / sizeof(int), sizeof(block) / sizeof(int*), 0);
+void rotate_right(int** arr, int** block, int x, int y, int n, int x_max, int y_max) {
+	int** temp = copy_2d_arr(block, n, n, 0);
 
 	for (int i = 0; i < 3; i++) {
 		rotate_minus_90(temp, n);
 	}
 
-	if (!is_y_collision(arr, temp, n, n) && !is_x_collision(arr, temp, n, n)) {
+	if (!is_y_collision(arr, temp, x, y, n, x_max, y_max) && !is_x_collision(arr, temp, x, y, n, x_max, y_max)) {
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				arr[i][j] = temp[i][j];
@@ -262,10 +270,10 @@ int** copy_2d_arr(int** arr, int x, int y, int break_arr) {
 	return res;
 }
 
-void stick(int** arr, int** block, int x, int y, int n) {
+void stick(int** arr, int** block, int x, int y, int n, int x_max, int y_max) {
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
-			if (block[i][j] && y + i < sizeof(arr) / sizeof(int*) && x + j < sizeof(arr[0]) / sizeof(int)) {
+			if (block[i][j] && y + j < y_max && x + i < x_max) {
 				arr[x + i][y + j] = block[i][j];
 			}
 		}
@@ -411,7 +419,7 @@ int** make_block() {
 	}
 
 
-	return arr;
+	return res;
 }
 
 
